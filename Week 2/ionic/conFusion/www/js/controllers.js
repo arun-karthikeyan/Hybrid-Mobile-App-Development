@@ -77,14 +77,14 @@ angular.module('conFusion.controllers', [])
     function(response){
       $scope.dishes = response;
       $timeout(function(){
-      $ionicLoading.hide();
-    },1000);
+        $ionicLoading.hide();
+      },1000);
       //$scope.showMenu = true;
     }, function(response){
       $scope.message = "Error: "+response.status+" "+response.statusText;
       $timeout(function(){
-      $ionicLoading.hide();
-    },1000);
+        $ionicLoading.hide();
+      },1000);
     });
 
     $scope.toggleDelete = function(){
@@ -211,7 +211,7 @@ angular.module('conFusion.controllers', [])
       };
     }])
 
-    .controller('DishDetailController', ['$scope', '$stateParams', 'menuFactory', 'baseURL', function($scope, $stateParams, menuFactory, baseURL) {
+    .controller('DishDetailController', ['$scope', '$stateParams', 'menuFactory', 'favoriteFactory', '$ionicPopover', '$ionicModal', 'baseURL', function($scope, $stateParams, menuFactory, favoriteFactory, $ionicPopover, $ionicModal, baseURL) {
 
       $scope.baseURL = baseURL;
       $scope.dish = {};
@@ -229,6 +229,55 @@ angular.module('conFusion.controllers', [])
         }
       );
 
+
+      $scope.popover = $ionicPopover.fromTemplateUrl('templates/dish-detail-popover.html', {
+        scope: $scope
+      }).then(function(popover){
+        $scope.popover = popover;
+      });
+
+      $scope.showDishDetailPopover = function($event) {
+        $scope.popover.show($event);
+      };
+
+      $scope.addFavorite = function(dishid) {
+        console.log('Adding dish : '+dishid+' to favorites');
+        favoriteFactory.addToFavorites(dishid);
+        $scope.popover.hide();
+      };
+
+      $scope.commentModal = $ionicModal.fromTemplateUrl('templates/dish-comment.html', {
+        scope: $scope
+      }).then(function(modal){
+        console.log('Comment modal loaded successfully');
+        $scope.commentModal = modal;
+      });
+
+      $scope.mycomment = {rating:"", comment:"", author:"", date:""};
+
+      $scope.showCommentModal = function(){
+        $scope.commentModal.show();
+        $scope.popover.hide();
+      };
+      
+      $scope.closeCommentModal = function(){
+        $scope.commentModal.hide();
+      };
+
+      $scope.submitComment = function () {
+
+        $scope.mycomment.date = new Date().toISOString();
+        console.log($scope.mycomment);
+
+        $scope.dish.comments.push($scope.mycomment);
+        menuFactory.getDishes().update({id:$scope.dish.id},$scope.dish);
+
+        console.log("Comment added from author : "+$scope.mycomment.author);
+
+        $scope.mycomment = {rating:"", comment:"", author:"", date:""};
+
+        $scope.closeCommentModal();
+      }
 
     }])
 

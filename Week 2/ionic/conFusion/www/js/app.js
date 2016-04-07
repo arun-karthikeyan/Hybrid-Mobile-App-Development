@@ -70,6 +70,7 @@ angular.module('conFusion', ['ionic', 'conFusion.controllers', 'conFusion.servic
       }
     }
   })
+
   .state('app.contactus', {
       url: '/contactus',
       views: {
