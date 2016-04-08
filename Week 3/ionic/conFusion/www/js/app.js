@@ -6,7 +6,7 @@
 // 'starter.controllers' is found in controllers.js
 angular.module('conFusion', ['ionic', 'conFusion.controllers', 'conFusion.services'])
 
-.run(function($ionicPlatform) {
+.run(function($ionicPlatform, $rootScope, $ionicLoading) {
   $ionicPlatform.ready(function() {
     // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
     // for form inputs)
@@ -20,6 +20,26 @@ angular.module('conFusion', ['ionic', 'conFusion.controllers', 'conFusion.servic
       StatusBar.styleDefault();
     }
   });
+
+  $rootScope.$on('loading:show', function(){
+    $ionicLoading.show({
+      template: '<ionic-spinner></ionic-spinner> Loading...'
+    });
+  });
+
+  $rootScope.$on('loading:hide', function(){
+    $ionicLoading.hide();
+  });
+
+  $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState){
+    console.log('Loading... from: ', fromState.name);
+    $rootScope.$broadcast('loading:show');
+  });
+
+  $rootScope.$on('$stateChangeSuccess', function(event, toState){
+    console.log('Loading Done to: ', toState.name);
+    $rootScope.$broadcast('loading:hide');
+  })
 })
 
 .config(function($stateProvider, $urlRouterProvider) {
@@ -66,7 +86,7 @@ angular.module('conFusion', ['ionic', 'conFusion.controllers', 'conFusion.servic
     views: {
       'mainContent': {
         templateUrl: 'templates/dishdetail.html',
-        controller: 'DishDetailController', 
+        controller: 'DishDetailController',
         resolve: {
           dish: ['menuFactory', '$stateParams', function(menuFactory, $stateParams) {
             return menuFactory.get({id:parseInt($stateParams.id,10)});
