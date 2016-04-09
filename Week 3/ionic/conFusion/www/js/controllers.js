@@ -1,6 +1,6 @@
 angular.module('conFusion.controllers', [])
 
-.controller('AppCtrl', function($scope, $ionicModal, $timeout) {
+.controller('AppCtrl', function($scope, $ionicModal, $timeout, $localStorage) {
 
   // With the new view caching in Ionic, Controllers are only called
   // when they are recreated or on app start, instead of every page change.
@@ -8,10 +8,11 @@ angular.module('conFusion.controllers', [])
   // listen for the $ionicView.enter event:
   //$scope.$on('$ionicView.enter', function(e) {
   //});
-
+  var platform = ionic.Platform.platform();
   // Form data for the login modal
-  $scope.loginData = {};
+  $scope.loginData = $localStorage.getObject(platform+'_userinfo', '{}');
   $scope.reservation = {};
+
   // Create the login modal that we will use later
   $ionicModal.fromTemplateUrl('templates/login.html', {
     scope: $scope
@@ -54,7 +55,8 @@ angular.module('conFusion.controllers', [])
   // Perform the login action when the user submits the login form
   $scope.doLogin = function() {
     console.log('Doing login; user: ', $scope.loginData.username, '; password: ', $scope.loginData.password);
-
+    //adding userinfo to localStorage
+    $localStorage.storeObject(platform+'_userinfo', $scope.loginData);
     // Simulate a login delay. Remove this and replace with your login
     // code if using a login system
     $timeout(function() {
