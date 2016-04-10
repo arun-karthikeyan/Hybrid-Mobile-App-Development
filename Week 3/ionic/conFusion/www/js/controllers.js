@@ -227,7 +227,7 @@ angular.module('conFusion.controllers', [])
         $scope.commentModal = modal;
       });
 
-      $scope.mycomment = {rating:"", comment:"", author:"", date:""};
+      $scope.mycomment = {rating:"5", comment:"", author:"", date:""};
 
       $scope.showCommentModal = function(){
         $scope.commentModal.show();
@@ -248,7 +248,7 @@ angular.module('conFusion.controllers', [])
 
         console.log("Comment added from author : "+$scope.mycomment.author);
 
-        $scope.mycomment = {rating:"", comment:"", author:"", date:""};
+        $scope.mycomment = {rating:"5", comment:"", author:"", date:""};
 
         $scope.closeCommentModal();
       }
