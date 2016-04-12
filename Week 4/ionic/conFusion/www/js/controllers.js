@@ -1,6 +1,6 @@
 angular.module('conFusion.controllers', [])
 
-.controller('AppCtrl', function($scope, $ionicModal, $timeout, $localStorage) {
+.controller('AppCtrl', function($scope, $ionicModal, $timeout, $localStorage, $ionicPlatform, $cordovaCamera) {
 
   // With the new view caching in Ionic, Controllers are only called
   // when they are recreated or on app start, instead of every page change.
@@ -12,6 +12,7 @@ angular.module('conFusion.controllers', [])
   // Form data for the login modal
   $scope.loginData = $localStorage.getObject(platform+'_userinfo', '{}');
   $scope.reservation = {};
+  $scope.registration = {};
 
   // Create the login modal that we will use later
   $ionicModal.fromTemplateUrl('templates/login.html', {
@@ -19,6 +20,28 @@ angular.module('conFusion.controllers', [])
   }).then(function(modal) {
     $scope.modal = modal;
   });
+
+  //Create the register modal that we will use later
+  $ionicModal.fromTemplateUrl('templates/register.html', {
+    scope: $scope
+  }).then(function(modal) {
+    $scope.registerForm = modal;
+  });
+
+  $scope.closeRegister = function() {
+    $scope.registerForm.hide();
+  };
+
+  $scope.register = function() {
+    $scope.registerForm.show();
+  };
+
+  $scope.doRegister = function() {
+    console.log('Doing registration for user: ', $scope.loginData.username);
+    $timeout(function () {
+      $scope.closeRegister();
+    }, 1000);
+  };
 
   //Create the reserve table modal
   $ionicModal.fromTemplateUrl('templates/reserve.html', {
@@ -63,6 +86,31 @@ angular.module('conFusion.controllers', [])
       $scope.closeLogin();
     }, 1000);
   };
+
+  //code for managing the cordovaCamera
+  $ionicPlatform.ready(function(){
+    var options = {
+      quality: 100, //on a scale of 0 - 100
+      destinationType: Camera.DestinationType.DATA_URL,
+      sourceType: Camera.PictureSourceType.CAMERA,
+      allowEdit: true,
+      encodingType: Camera.EncodingType.JPEG,
+      targetWidth: 100,
+      targetHeight: 100,
+      popoverOptions: CameraPopoverOptions,
+      saveToPhotoAlbum: false
+    };
+
+    $scope.takePicture = function(){
+      $cordovaCamera.getPicture(options).then(function(imageData) {
+        $scope.registration.imgSrc = "data:image/jpeg;base64,"+imageData;
+      }, function(err) {
+        console.log(err);
+      });
+      $scope.registerform.show();
+    };
+
+  });
 })
 
 .controller('FavoritesController', ['$scope', 'favoriteFactory', '$ionicListDelegate', '$ionicPopup', '$ionicLoading', '$cordovaLocalNotification', '$cordovaToast', '$ionicPlatform', 'baseURL', 'dishes', function($scope, favoriteFactory, $ionicListDelegate, $ionicPopup, $ionicLoading, $cordovaLocalNotification, $cordovaToast, $ionicPlatform, baseURL, dishes) {

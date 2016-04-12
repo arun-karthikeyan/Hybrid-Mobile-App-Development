@@ -22,7 +22,8 @@
     "ionic-plugin-keyboard",
     "cordova-plugin-splashscreen@latest",
     "de.appplant.cordova.plugin.local-notification@latest",
-    "cordova-plugin-x-toast@latest"
+    "cordova-plugin-x-toast@latest",
+    "cordova-plugin-camera@latest"
   ],
   "cordovaPlatforms": [
     "android"
