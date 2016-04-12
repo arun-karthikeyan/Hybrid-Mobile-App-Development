@@ -22,11 +22,12 @@ angular.module('conFusion.services', ['ngResource'])
     for(var i=0;i<favorites.length;i++){
       if(favorites[i].id == dishid){
         console.log("dishid: "+dishid+" is already in favorites, returning!");
-        return;
+        return false;
       }
     }
     favorites.push({id: dishid});
     $localStorage.storeObject(platform+'_favorites', favorites);
+    return true;
   };
 
   favFac.getFavorites = function() {

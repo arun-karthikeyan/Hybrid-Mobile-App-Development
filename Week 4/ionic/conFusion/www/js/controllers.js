@@ -65,223 +65,268 @@ angular.module('conFusion.controllers', [])
   };
 })
 
-.controller('FavoritesController', ['$scope', 'favoriteFactory', '$ionicListDelegate', '$ionicPopup', '$ionicLoading', 'baseURL', 'dishes', function($scope, favoriteFactory, $ionicListDelegate, $ionicPopup, $ionicLoading, baseURL, dishes) {
+.controller('FavoritesController', ['$scope', 'favoriteFactory', '$ionicListDelegate', '$ionicPopup', '$ionicLoading', '$cordovaLocalNotification', '$cordovaToast', '$ionicPlatform', 'baseURL', 'dishes', function($scope, favoriteFactory, $ionicListDelegate, $ionicPopup, $ionicLoading, $cordovaLocalNotification, $cordovaToast, $ionicPlatform, baseURL, dishes) {
   $scope.baseURL = baseURL;
   $scope.shouldShowDelete = false;
 
   $scope.favorites = favoriteFactory.getFavorites();
   $scope.dishes = dishes;
 
-    $scope.toggleDelete = function(){
-      $scope.shouldShowDelete = !$scope.shouldShowDelete;
-      console.log('shouldShowDelete : ',$scope.shouldShowDelete);
-    };
+  $scope.toggleDelete = function(){
+    $scope.shouldShowDelete = !$scope.shouldShowDelete;
+    console.log('shouldShowDelete : ',$scope.shouldShowDelete);
+  };
 
-    $scope.deleteFavorite = function(dishid) {
-      var confirmDelete = $ionicPopup.confirm({
-        title: 'Confirm Delete',
-        template: 'Are you sure you want to delete this item ?'
-      });
+  $scope.deleteFavorite = function(dishid) {
+    var confirmDelete = $ionicPopup.confirm({
+      title: 'Confirm Delete',
+      template: 'Are you sure you want to delete this item ?'
+    });
 
-      confirmDelete.then(function(response){
-        if(response){
-          console.log('Ok to delete favorite : '+dishid);
-          favoriteFactory.deleteFromFavorites(dishid);
-          $scope.shouldShowDelete = false;
-          console.log('deleted dish id : '+dishid);
-        }else{
-          console.log('canceled delete of dish : '+dishid);
-          $scope.shouldShowDelete = false;
-        }
-      });
-    };
+    confirmDelete.then(function(response){
+      if(response){
+        console.log('Ok to delete favorite : '+dishid);
+        favoriteFactory.deleteFromFavorites(dishid);
+        $scope.shouldShowDelete = false;
+        $ionicPlatform.ready(function() {
+          $cordovaLocalNotification.schedule({
+            id: 2,
+            title: 'Deleted Favorite',
+            text: $scope.dishes[dishid].name
+          }).then(function () {
+            console.log('Deleted Favorite Notification Shown');
+          }, function () {
+            console.log('Failed to show Deleted Favorite Notificatoin');
+          });
 
-  }])
+          $cordovaToast.showLongCenter('Deleted '+$scope.dishes[dishid].name+' from favorites');
+        });
+        console.log('deleted dish id : '+dishid);
+      }else{
+        console.log('canceled delete of dish : '+dishid);
+        $scope.shouldShowDelete = false;
+      }
+    });
+  };
 
-  .filter('favoriteFilter', function(){
-    return function(dishes, favorites){
-      var out = [];
-      //simple linear search, will be slow for large arrays
-      for(var i=0;i<favorites.length;i++){
-        for(var j=0;j<dishes.length;j++){
-          if(dishes[j].id === favorites[i].id){
-            out.push(dishes[j]);
-          }
+}])
+
+.filter('favoriteFilter', function(){
+  return function(dishes, favorites){
+    var out = [];
+    //simple linear search, will be slow for large arrays
+    for(var i=0;i<favorites.length;i++){
+      for(var j=0;j<dishes.length;j++){
+        if(dishes[j].id === favorites[i].id){
+          out.push(dishes[j]);
         }
       }
-      return out;
-    };
-  })
+    }
+    return out;
+  };
+})
 
-  .controller('MenuController', ['$scope', 'dishes', 'favoriteFactory', '$ionicListDelegate', 'baseURL', function($scope, dishes, favoriteFactory, $ionicListDelegate, baseURL) {
+.controller('MenuController', ['$scope', 'dishes', 'favoriteFactory', '$ionicListDelegate', '$cordovaLocalNotification', '$cordovaToast', '$ionicPlatform', 'baseURL', function($scope, dishes, favoriteFactory, $ionicListDelegate, $cordovaLocalNotification, $cordovaToast, $ionicPlatform, baseURL) {
 
-    $scope.baseURL = baseURL;
-    $scope.tab = 1;
-    $scope.filtText = '';
-    $scope.showDetails = false;
-    $scope.showMenu = false;
-    $scope.message = "Loading ...";
+  $scope.baseURL = baseURL;
+  $scope.tab = 1;
+  $scope.filtText = '';
+  $scope.showDetails = false;
+  $scope.showMenu = false;
+  $scope.message = "Loading ...";
 
-    $scope.dishes = dishes;
+  $scope.dishes = dishes;
 
 
-      $scope.select = function(setTab) {
-        $scope.tab = setTab;
+  $scope.select = function(setTab) {
+    $scope.tab = setTab;
 
-        if (setTab === 2) {
-          $scope.filtText = "appetizer";
-        }
-        else if (setTab === 3) {
-          $scope.filtText = "mains";
-        }
-        else if (setTab === 4) {
-          $scope.filtText = "dessert";
-        }
-        else {
-          $scope.filtText = "";
-        }
-      };
+    if (setTab === 2) {
+      $scope.filtText = "appetizer";
+    }
+    else if (setTab === 3) {
+      $scope.filtText = "mains";
+    }
+    else if (setTab === 4) {
+      $scope.filtText = "dessert";
+    }
+    else {
+      $scope.filtText = "";
+    }
+  };
 
-      $scope.isSelected = function (checkTab) {
-        return ($scope.tab === checkTab);
-      };
+  $scope.isSelected = function (checkTab) {
+    return ($scope.tab === checkTab);
+  };
 
-      $scope.toggleDetails = function() {
-        $scope.showDetails = !$scope.showDetails;
-      };
+  $scope.toggleDetails = function() {
+    $scope.showDetails = !$scope.showDetails;
+  };
 
-      $scope.addFavorite = function(dishid){
-        console.log("index is "+dishid);
-        favoriteFactory.addToFavorites(dishid);
-        $ionicListDelegate.closeOptionButtons();
-      };
-    }])
+  $scope.addFavorite = function(dishid){
+    console.log("index is "+dishid);
+    added = favoriteFactory.addToFavorites(dishid);
+    $ionicListDelegate.closeOptionButtons();
 
-    .controller('ContactController', ['$scope', function($scope) {
+    $ionicPlatform.ready(function(){
+      if(added){
+        $cordovaLocalNotification.schedule({
+          id: 1,
+          title: "Added Favorite",
+          text: $scope.dishes[dishid].name
+        }).then(function () {
+          console.log('Added Favorite '+$scope.dishes[dishid].name);
+        }, function () {
+          console.log('Failed to Add Favorite '+$scope.dishes[dishid].name);
+        });
 
-      $scope.feedback = {mychannel:"", firstName:"", lastName:"", agree:false, email:"" };
+        $cordovaToast.show('Added Favorite '+$scope.dishes[dishid].name, 'long', 'center')
+        .then(function (success) {
+          //success
+          console.log('Add Favorite Toast shown successfully');
+        }, function(error) {
+          //error
+          console.log('Add Favorite Toast not shown');
+        });
+      }
+      else{
+        $cordovaToast.show($scope.dishes[dishid].name+' is already in your favorites', 'long', 'center')
+        .then(function (success) {
+          console.log('Already added favorite Toast shown successfully');
+        }, function (error) {
+          console.log('Already added favorite Toast not shown');
+        });
+      }
+    });
 
-      var channels = [{value:"tel", label:"Tel."}, {value:"Email",label:"Email"}];
+  };
+}])
 
-      $scope.channels = channels;
+.controller('ContactController', ['$scope', function($scope) {
+
+  $scope.feedback = {mychannel:"", firstName:"", lastName:"", agree:false, email:"" };
+
+  var channels = [{value:"tel", label:"Tel."}, {value:"Email",label:"Email"}];
+
+  $scope.channels = channels;
+  $scope.invalidChannelSelection = false;
+
+}])
+
+.controller('FeedbackController', ['$scope', 'feedbackFactory', function($scope,feedbackFactory) {
+
+  $scope.sendFeedback = function() {
+
+    console.log($scope.feedback);
+
+    if ($scope.feedback.agree && ($scope.feedback.mychannel == "")) {
+      $scope.invalidChannelSelection = true;
+      console.log('incorrect');
+    }
+    else {
       $scope.invalidChannelSelection = false;
+      feedbackFactory.save($scope.feedback);
+      $scope.feedback = {mychannel:"", firstName:"", lastName:"", agree:false, email:"" };
+      $scope.feedback.mychannel="";
+      $scope.feedbackForm.$setPristine();
+      console.log($scope.feedback);
+    }
+  };
+}])
 
-    }])
+.controller('DishDetailController', ['$scope', '$stateParams', 'menuFactory', 'dish', 'favoriteFactory', '$ionicPopover', '$ionicModal', 'baseURL', function($scope, $stateParams, menuFactory, dish, favoriteFactory, $ionicPopover, $ionicModal, baseURL) {
 
-    .controller('FeedbackController', ['$scope', 'feedbackFactory', function($scope,feedbackFactory) {
-
-      $scope.sendFeedback = function() {
-
-        console.log($scope.feedback);
-
-        if ($scope.feedback.agree && ($scope.feedback.mychannel == "")) {
-          $scope.invalidChannelSelection = true;
-          console.log('incorrect');
-        }
-        else {
-          $scope.invalidChannelSelection = false;
-          feedbackFactory.save($scope.feedback);
-          $scope.feedback = {mychannel:"", firstName:"", lastName:"", agree:false, email:"" };
-          $scope.feedback.mychannel="";
-          $scope.feedbackForm.$setPristine();
-          console.log($scope.feedback);
-        }
-      };
-    }])
-
-    .controller('DishDetailController', ['$scope', '$stateParams', 'menuFactory', 'dish', 'favoriteFactory', '$ionicPopover', '$ionicModal', 'baseURL', function($scope, $stateParams, menuFactory, dish, favoriteFactory, $ionicPopover, $ionicModal, baseURL) {
-
-      $scope.baseURL = baseURL;
-      $scope.showDish = false;
-      $scope.message="Loading ...";
-      $scope.dish = dish;
+  $scope.baseURL = baseURL;
+  $scope.showDish = false;
+  $scope.message="Loading ...";
+  $scope.dish = dish;
 
 
-      $scope.popover = $ionicPopover.fromTemplateUrl('templates/dish-detail-popover.html', {
-        scope: $scope
-      }).then(function(popover){
-        $scope.popover = popover;
-      });
+  $scope.popover = $ionicPopover.fromTemplateUrl('templates/dish-detail-popover.html', {
+    scope: $scope
+  }).then(function(popover){
+    $scope.popover = popover;
+  });
 
-      $scope.showDishDetailPopover = function($event) {
-        $scope.popover.show($event);
-      };
+  $scope.showDishDetailPopover = function($event) {
+    $scope.popover.show($event);
+  };
 
-      $scope.addFavorite = function(dishid) {
-        console.log('Adding dish : '+dishid+' to favorites');
-        favoriteFactory.addToFavorites(dishid);
-        $scope.popover.hide();
-      };
+  $scope.addFavorite = function(dishid) {
+    console.log('Adding dish : '+dishid+' to favorites');
+    favoriteFactory.addToFavorites(dishid);
+    $scope.popover.hide();
+  };
 
-      $scope.commentModal = $ionicModal.fromTemplateUrl('templates/dish-comment.html', {
-        scope: $scope
-      }).then(function(modal){
-        console.log('Comment modal loaded successfully');
-        $scope.commentModal = modal;
-      });
+  $scope.commentModal = $ionicModal.fromTemplateUrl('templates/dish-comment.html', {
+    scope: $scope
+  }).then(function(modal){
+    console.log('Comment modal loaded successfully');
+    $scope.commentModal = modal;
+  });
 
-      $scope.mycomment = {rating:"5", comment:"", author:"", date:""};
+  $scope.mycomment = {rating:"5", comment:"", author:"", date:""};
 
-      $scope.showCommentModal = function(){
-        $scope.commentModal.show();
-        $scope.popover.hide();
-      };
+  $scope.showCommentModal = function(){
+    $scope.commentModal.show();
+    $scope.popover.hide();
+  };
 
-      $scope.closeCommentModal = function(){
-        $scope.commentModal.hide();
-      };
+  $scope.closeCommentModal = function(){
+    $scope.commentModal.hide();
+  };
 
-      $scope.submitComment = function () {
+  $scope.submitComment = function () {
 
-        $scope.mycomment.date = new Date().toISOString();
-        console.log($scope.mycomment);
+    $scope.mycomment.date = new Date().toISOString();
+    console.log($scope.mycomment);
 
-        $scope.dish.comments.push($scope.mycomment);
-        menuFactory.update({id:$scope.dish.id},$scope.dish);
+    $scope.dish.comments.push($scope.mycomment);
+    menuFactory.update({id:$scope.dish.id},$scope.dish);
 
-        console.log("Comment added from author : "+$scope.mycomment.author);
+    console.log("Comment added from author : "+$scope.mycomment.author);
 
-        $scope.mycomment = {rating:"5", comment:"", author:"", date:""};
+    $scope.mycomment = {rating:"5", comment:"", author:"", date:""};
 
-        $scope.closeCommentModal();
-      }
+    $scope.closeCommentModal();
+  }
 
-    }])
+}])
 
-    .controller('DishCommentController', ['$scope', 'menuFactory', function($scope,menuFactory) {
+.controller('DishCommentController', ['$scope', 'menuFactory', function($scope,menuFactory) {
 
-      $scope.mycomment = {rating:5, comment:"", author:"", date:""};
+  $scope.mycomment = {rating:5, comment:"", author:"", date:""};
 
-      $scope.submitComment = function () {
+  $scope.submitComment = function () {
 
-        $scope.mycomment.date = new Date().toISOString();
-        console.log($scope.mycomment);
+    $scope.mycomment.date = new Date().toISOString();
+    console.log($scope.mycomment);
 
-        $scope.dish.comments.push($scope.mycomment);
-        menuFactory.update({id:$scope.dish.id},$scope.dish);
+    $scope.dish.comments.push($scope.mycomment);
+    menuFactory.update({id:$scope.dish.id},$scope.dish);
 
-        $scope.commentForm.$setPristine();
+    $scope.commentForm.$setPristine();
 
-        $scope.mycomment = {rating:5, comment:"", author:"", date:""};
-      }
-    }])
+    $scope.mycomment = {rating:5, comment:"", author:"", date:""};
+  }
+}])
 
-    // implement the IndexController and About Controller here
+// implement the IndexController and About Controller here
 
-    .controller('IndexController', ['$scope', 'featuredDish', 'executiveChef', 'promotion', 'baseURL', function($scope, featuredDish, executiveChef, promotion, baseURL) {
-      $scope.baseURL = baseURL;
-      $scope.leader = executiveChef;
-      $scope.showDish = false;
-      $scope.message="Loading ...";
-      $scope.dish = featuredDish;
-      $scope.promotion = promotion;
+.controller('IndexController', ['$scope', 'featuredDish', 'executiveChef', 'promotion', 'baseURL', function($scope, featuredDish, executiveChef, promotion, baseURL) {
+  $scope.baseURL = baseURL;
+  $scope.leader = executiveChef;
+  $scope.showDish = false;
+  $scope.message="Loading ...";
+  $scope.dish = featuredDish;
+  $scope.promotion = promotion;
 
-    }])
+}])
 
-    .controller('AboutController', ['$scope', 'leaders', 'baseURL', function($scope, leaders, baseURL) {
+.controller('AboutController', ['$scope', 'leaders', 'baseURL', function($scope, leaders, baseURL) {
 
-      $scope.leaders = leaders;
-      $scope.baseURL = baseURL;
-      //console.log($scope.leaders);
+  $scope.leaders = leaders;
+  $scope.baseURL = baseURL;
+  //console.log($scope.leaders);
 
-    }]);
+}]);
