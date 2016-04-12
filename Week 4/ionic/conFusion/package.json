@@ -23,7 +23,9 @@
     "cordova-plugin-splashscreen@latest",
     "de.appplant.cordova.plugin.local-notification@latest",
     "cordova-plugin-x-toast@latest",
-    "cordova-plugin-camera@latest"
+    "cordova-plugin-camera@latest",
+    "cordova-plugin-image-picker@latest",
+    "cordova-plugin-vibration@latest"
   ],
   "cordovaPlatforms": [
     "android"

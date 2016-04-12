@@ -7,15 +7,20 @@
   <ion-content>
     <form id="registerForm" name="registerForm" ng-submit="doRegister()">
       <div class="list">
-        <label class="item item-input">
-          <span class="input-label">Your Picture</span>
+        <label class="item text-center">
+          <span>Your Picture</span>
         </label>
-        <label class="item item-input">
+        <label class="item text-center">
           <img class="padding" ng-src="{{registration.imgSrc}}">
         </label>
         <label class="item">
           <button class="button button-block button-positive" type="button" ng-click="takePicture()">
             Take Picture
+          </button>
+        </label>
+        <label class="item">
+          <button class="button button-block button-balanced" type="button" ng-click="choosePicture()">
+            Gallery
           </button>
         </label>
         <label class="item item-input">
